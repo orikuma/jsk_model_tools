@@ -18,7 +18,8 @@
 
   <build_depend>roscpp</build_depend>
   <build_depend>rospack</build_depend>
-  <build_depend>yaml-cpp</build_depend>
+  <!-- <build_depend>yaml-cpp</build_depend> -->
+  <build_depend>yaml_cpp_0_3</build_depend>
   <build_depend>assimp_devel</build_depend>
   <build_depend>urdf</build_depend>
   <build_depend>resource_retriever</build_depend>
@@ -36,7 +37,8 @@
 
   <run_depend>roscpp</run_depend>
   <run_depend>rospack</run_depend>
-  <run_depend>yaml-cpp</run_depend>
+  <!-- <run_depend>yaml-cpp</run_depend> -->
+  <build_depend>yaml_cpp_0_3</build_depend>
   <run_depend>assimp_devel</run_depend>
   <run_depend>urdf</run_depend>
   <run_depend>liburdfdom-dev</run_depend> <!-- for indigo -->
