@@ -13,6 +13,7 @@ using namespace ColladaDOM150;
 #include <fstream>
 // #include "yaml-cpp/yaml.h"
 #include "yaml-cpp-0.3/yaml.h"
+namespace YAML = YAML_0_3;
 
 #include <boost/foreach.hpp>
 
@@ -980,14 +981,14 @@ int main(int argc, char* argv[]){
   string limb_candidates[] = {"torso", "larm", "rarm", "lleg", "rleg", "head"}; // candidates of limb names
 
   vector<pair<string, size_t> > limb_order;
-  YAML_0_3::Node doc;
+  YAML::Node doc;
   if (yaml_filename != NULL) {
 #ifndef USE_CURRENT_YAML
     ifstream fin(yaml_filename);
     if (fin.fail()) {
       fprintf(stderr, "%c[31m;; Could not open %s%c[m\n", 0x1b, yaml_filename, 0x1b);
     }
-    YAML_0_3::Parser parser(fin);
+    YAML::Parser parser(fin);
     parser.GetNextDocument(doc);
 #else
     // yaml-cpp is greater than 0.5.0
@@ -1017,16 +1018,16 @@ int main(int argc, char* argv[]){
     string limb_name = limb_order[i].first;
     vector<string> tmp_link_names, tmp_joint_names;
     try {
-      const YAML_0_3::Node& limb_doc = doc[limb_name];
+      const YAML::Node& limb_doc = doc[limb_name];
       for(unsigned int i = 0; i < limb_doc.size(); i++) {
-	const YAML_0_3::Node& n = limb_doc[i];
+	const YAML::Node& n = limb_doc[i];
 #ifdef USE_CURRENT_YAML
 	for(YAML::const_iterator it=n.begin();it!=n.end();it++) {
 	  string key, value;
 	  key = it->first.as<std::string>();
 	  value = it->second.as<std::string>();
 #else
-	for(YAML_0_3::Iterator it=n.begin();it!=n.end();it++) {
+	for(YAML::Iterator it=n.begin();it!=n.end();it++) {
 	  string key, value; it.first() >> key; it.second() >> value;
 #endif
 	  tmp_joint_names.push_back(key);
@@ -1035,7 +1036,7 @@ int main(int argc, char* argv[]){
 	}
       }
       limbs.push_back(link_joint_pair(limb_name, link_joint(tmp_link_names, tmp_joint_names)));
-    } catch(YAML_0_3::RepresentationException& e) {
+    } catch(YAML::RepresentationException& e) {
     }
   }
 
@@ -1273,13 +1274,13 @@ int main(int argc, char* argv[]){
     if (link_names.size()>0) {
       string end_coords_parent_name(link_names.back());
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["parent"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["parent"];
 #ifdef USE_CURRENT_YAML
 	end_coords_parent_name = n.as<std::string>();
 #else
 	n >> end_coords_parent_name;
 #endif
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       if (add_link_suffix) {
         fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s_lk :copy-worldcoords) :name :%s-end-coords))\n", limb_name.c_str(), end_coords_parent_name.c_str(), limb_name.c_str());
@@ -1287,7 +1288,7 @@ int main(int argc, char* argv[]){
         fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords) :name %s-end-coords))\n", limb_name.c_str(), end_coords_parent_name.c_str(), limb_name.c_str());
       }
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["translate"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["translate"];
         if ( n.size() > 0 ) {
           double value;
           fprintf(output_fp, "     (send %s-end-coords :translate (float-vector", limb_name.c_str());
@@ -1298,10 +1299,10 @@ int main(int argc, char* argv[]){
 #endif
           fprintf(output_fp, "))\n");
         }
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["rotate"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["rotate"];
         if ( n.size() > 0 ) {
           double value;
           fprintf(output_fp, "     (send %s-end-coords :rotate", limb_name.c_str());
@@ -1318,7 +1319,7 @@ int main(int argc, char* argv[]){
 #endif
           fprintf(output_fp, "))\n");
         }
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       if(add_link_suffix) {
         fprintf(output_fp, "     (send %s_lk :assoc %s-end-coords)\n", end_coords_parent_name.c_str(), limb_name.c_str());
@@ -1442,26 +1443,26 @@ int main(int argc, char* argv[]){
   try {
     doc["angle-vector"]["reset-pose"];
     fprintf(output_fp, "     (send self :reset-pose) ;; :set reset-pose\n\n");
-  } catch(YAML_0_3::RepresentationException& e) {
+  } catch(YAML::RepresentationException& e) {
   }
 
   fprintf(output_fp, "     self)) ;; :init\n\n");
 
   try {
-    const YAML_0_3::Node& n = doc["angle-vector"];
+    const YAML::Node& n = doc["angle-vector"];
     if ( n.size() > 0 ) fprintf(output_fp, "    ;; pre-defined pose methods\n");
 #ifdef USE_CURRENT_YAML
-    for(YAML_0_3::const_iterator it=n.begin();it!=n.end();it++) {
+    for(YAML::const_iterator it=n.begin();it!=n.end();it++) {
       string name = it->first.as<std::string>();
 #else
-    for(YAML_0_3::Iterator it=n.begin();it!=n.end();it++) {
+    for(YAML::Iterator it=n.begin();it!=n.end();it++) {
       string name; it.first() >> name;
 #endif
       fprintf(output_fp, "    (:%s () (send self :angle-vector (float-vector", name.c_str());
 #ifdef USE_CURRENT_YAML
-      const YAML_0_3::Node& v = it->second;
+      const YAML::Node& v = it->second;
 #else
-      const YAML_0_3::Node& v = it.second();
+      const YAML::Node& v = it.second();
 #endif
       for(unsigned int i=0;i<v.size();i++){
 #ifdef USE_CURRENT_YAML
@@ -1473,7 +1474,7 @@ int main(int argc, char* argv[]){
       }
       fprintf(output_fp, ")))\n");
     }
-  } catch(YAML_0_3::RepresentationException& e) {
+  } catch(YAML::RepresentationException& e) {
   }
 
   // all joint and link name

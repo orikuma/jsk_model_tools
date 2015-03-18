@@ -31,6 +31,7 @@
 
 // #include "yaml-cpp/yaml.h"
 #include "yaml-cpp-0.3/yaml.h"
+namespace YAML = YAML_0_3;
 
 extern "C" {
 #include <qhull/qhull_a.h>
@@ -283,7 +284,7 @@ private:
   vector<link_joint_pair> limbs;
 
   FILE *fp;
-  YAML_0_3::Node doc;
+  YAML::Node doc;
 
   //
   bool add_joint_suffix;
@@ -493,7 +494,7 @@ void ModelEuslisp::readYaml (string &config_file) {
   if (fin.fail()) {
     fprintf(stderr, "%c[31m;; Could not open %s%c[m\n", 0x1b, config_file.c_str(), 0x1b);
   } else {
-    YAML_0_3::Parser parser(fin);
+    YAML::Parser parser(fin);
     parser.GetNextDocument(doc);
 
 #else
@@ -523,16 +524,16 @@ void ModelEuslisp::readYaml (string &config_file) {
     string limb_name = limb_order[i].first;
     vector<string> tmp_link_names, tmp_joint_names;
     try {
-      const YAML_0_3::Node& limb_doc = doc[limb_name];
+      const YAML::Node& limb_doc = doc[limb_name];
       for(unsigned int i = 0; i < limb_doc.size(); i++) {
-        const YAML_0_3::Node& n = limb_doc[i];
+        const YAML::Node& n = limb_doc[i];
 #ifdef USE_CURRENT_YAML
         for(YAML::const_iterator it=n.begin();it!=n.end();it++) {
           string key, value;
           key = it->first.as<std::string>();
           value = it->second.as<std::string>();
 #else
-        for(YAML_0_3::Iterator it=n.begin();it!=n.end();it++) {
+        for(YAML::Iterator it=n.begin();it!=n.end();it++) {
           string key, value; it.first() >> key; it.second() >> value;
 #endif
           tmp_joint_names.push_back(key);
@@ -546,7 +547,7 @@ void ModelEuslisp::readYaml (string &config_file) {
         }
       }
       limbs.push_back(link_joint_pair(limb_name, link_joint(tmp_link_names, tmp_joint_names)));
-    } catch(YAML_0_3::RepresentationException& e) {
+    } catch(YAML::RepresentationException& e) {
     }
   }
 }
@@ -831,13 +832,13 @@ void ModelEuslisp::printEndCoords () {
     if (link_names.size()>0) {
       string end_coords_parent_name(link_names.back());
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["parent"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["parent"];
 #ifdef USE_CURRENT_YAML
         end_coords_parent_name = n.as<std::string>();
 #else
         n >> end_coords_parent_name;
 #endif
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       if (add_link_suffix) {
         fprintf(fp, "     (setq %s-end-coords (make-cascoords :coords (send %s_lk :copy-worldcoords) :name :%s-end-coords))\n",
@@ -847,7 +848,7 @@ void ModelEuslisp::printEndCoords () {
                 limb_name.c_str(), end_coords_parent_name.c_str(), limb_name.c_str());
       }
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["translate"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["translate"];
         double value;
         fprintf(fp, "     (send %s-end-coords :translate (float-vector", limb_name.c_str());
 #ifdef USE_CURRENT_YAML
@@ -856,10 +857,10 @@ void ModelEuslisp::printEndCoords () {
         for(unsigned int i = 0; i < 3; i++) { n[i]>>value; fprintf(fp, " "FLOAT_PRECISION_FINE"", 1000*value);}
 #endif
         fprintf(fp, "))\n");
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       try {
-        const YAML_0_3::Node& n = doc[limb_name+"-end-coords"]["rotate"];
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["rotate"];
         double value;
         fprintf(fp, "     (send %s-end-coords :rotate", limb_name.c_str());
 #if USE_CURRENT_YAML
@@ -874,7 +875,7 @@ void ModelEuslisp::printEndCoords () {
         for(unsigned int i = 0; i < 3; i++) { n[i]>>value; fprintf(fp, " "FLOAT_PRECISION_FINE"", value);}
 #endif
         fprintf(fp, "))\n");
-      } catch(YAML_0_3::RepresentationException& e) {
+      } catch(YAML::RepresentationException& e) {
       }
       if(add_link_suffix) {
         fprintf(fp, "     (send %s_lk :assoc %s-end-coords)\n", end_coords_parent_name.c_str(), limb_name.c_str());
@@ -1013,26 +1014,26 @@ void ModelEuslisp::printEndCoords () {
   try {
     doc["angle-vector"]["reset-pose"];
     fprintf(fp, "     (send self :reset-pose) ;; :set reset-pose\n\n");
-  } catch(YAML_0_3::RepresentationException& e) {
+  } catch(YAML::RepresentationException& e) {
   }
 
   fprintf(fp, "     self)) ;; end of :init\n\n");
 
   try {
-    const YAML_0_3::Node& n = doc["angle-vector"];
+    const YAML::Node& n = doc["angle-vector"];
     if ( n.size() > 0 ) fprintf(fp, "  ;; pre-defined pose methods\n");
 #ifdef USE_CURRENT_YAML
     for(YAML::const_iterator it = n.begin(); it != n.end(); it++) {
       string name = it->first.as<std::string>();
 #else
-    for(YAML_0_3::Iterator it = n.begin(); it != n.end(); it++) {
+    for(YAML::Iterator it = n.begin(); it != n.end(); it++) {
       string name; it.first() >> name;
 #endif
       fprintf(fp, "  (:%s () (send self :angle-vector (float-vector", name.c_str());
 #ifdef USE_CURRENT_YAML
       const YAML::Node& v = it->second;
 #else
-      const YAML_0_3::Node& v = it.second();
+      const YAML::Node& v = it.second();
 #endif
       for(unsigned int i = 0; i < v.size(); i++){
 #ifdef USE_CURRENT_YAML
@@ -1044,7 +1045,7 @@ void ModelEuslisp::printEndCoords () {
       }
       fprintf(fp, ")))\n");
     }
-  } catch(YAML_0_3::RepresentationException& e) {
+  } catch(YAML::RepresentationException& e) {
   }
 
   // all joint and link name
@@ -1126,10 +1127,10 @@ void ModelEuslisp::parseSensors () {
     // sensor_name: 'sname', sensor_type: 'type', parent_link: 'LINK', translate: '0 0 0',  rotate: '1 0 0 90'
     // type -> base_force6d {force}, base_imu {gyro, acceleration}, base_pinhole_camera {camera}, they came from openrave collada
     try {
-      const YAML_0_3::Node& sensor_doc = doc["sensors"];
+      const YAML::Node& sensor_doc = doc["sensors"];
       for(unsigned int i = 0; i < sensor_doc.size(); i++) {
         daeSensor s;
-        const YAML_0_3::Node& n = sensor_doc[i];
+        const YAML::Node& n = sensor_doc[i];
 #ifdef USE_CURRENT_YAML
         if( n["sensor_name"] )
           s.name = n["sensor_name"].as<std::string>();
@@ -1163,7 +1164,7 @@ void ModelEuslisp::parseSensors () {
         if(n["translate"]) {
           std::string translate = n["translate"].as<std::string>();
 #else
-        if(const YAML_0_3::Node *pn = n.FindValue("translate")) {
+        if(const YAML::Node *pn = n.FindValue("translate")) {
           std::string translate;
           *pn >> translate;
 #endif
@@ -1182,7 +1183,7 @@ void ModelEuslisp::parseSensors () {
         if(n["rotate"]) {
           std::string rotate = n["rotate"].as<std::string>();
 #else
-        if(const YAML_0_3::Node *pn = n.FindValue("rotate")) {
+        if(const YAML::Node *pn = n.FindValue("rotate")) {
           std::string rotate;
           *pn >> rotate;
 #endif
@@ -1201,7 +1202,7 @@ void ModelEuslisp::parseSensors () {
         std::cerr << std::endl;
         m_sensors.push_back(s);
       }
-    } catch(YAML_0_3::Exception& e) {
+    } catch(YAML::Exception& e) {
       std::cerr << "[YAML error] : " << e.msg << std::endl;
     }
     stable_sort(m_sensors.begin(), m_sensors.end(), ModelEuslisp::daeSensor::compare);
